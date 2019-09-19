@@ -1,12 +1,19 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { withFormik, Form, Field } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
 
 
-const Login = ({values,errors,touched}) =>{
-    
+const Login = ({values,errors,touched,status}) =>{
+ const [users,setUsers] = useState([])
+useEffect(() => 
+{if (status){
+  setUsers([...users,status])
+}},[status]
+)
       return (
+
+        <div>
         <Form>
         <div>
         {errors.name && touched.name && <p>{errors.name}</p>}
@@ -26,11 +33,23 @@ const Login = ({values,errors,touched}) =>{
       </label>
         <button>Submit</button>
         </Form>
+      {users.map(user=>
+        <div key={user.id}>
+          <h2>{user.name}</h2>
+          <p>{user.email}</p>
+      </div>
+      )
+        }
+        
+        </div>
       )
 
 }
 
-export default withFormik({
+export default withFormik(
+  
+  {
+ 
     mapPropsToValues: (values) => {
       return {
         name:values.name || "",
@@ -52,18 +71,23 @@ export default withFormik({
 
       }),
 
-      handleSubmit(values, {resetForm}) {
-        
+      handleSubmit(values, {setStatus,setErrors,resetForm}) {
+        if (values.email === "waffle@syrup.com") {
+          setErrors({ email: "That email is already taken" });
+        } else {
           axios
             .post("https://reqres.in/api/users", values)
             .then(res => {
-              console.log(res); // Data was created successfully and logs to console
-            resetForm();
+              setStatus(res.data)
+            // Data was created successfully and logs to console
+           
+              resetForm()
               
             })
             .catch(err => {
               console.log(err); // There was an error creating the data and logs to console
-            });
-        }
+            });}
+        },
+        
   
     })(Login);
